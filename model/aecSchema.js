@@ -1,7 +1,7 @@
 const mongoose=require('mongoose');
 
 const aecSchema=new mongoose.Schema({
-    id:{
+    uid:{
         type:String,
         required:true
     },

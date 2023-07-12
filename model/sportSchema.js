@@ -1,7 +1,7 @@
 const mongoose=require('mongoose');
 
 const sportSchema=new mongoose.Schema({
-    id:{
+    uid:{
         type:String,
         required:true
     },

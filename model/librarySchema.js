@@ -1,7 +1,7 @@
 const mongoose=require('mongoose');
 
 const librarySchema=new mongoose.Schema({
-    id:{
+    uid:{
         type:String,
         required:true
     },

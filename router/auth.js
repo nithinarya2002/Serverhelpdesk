@@ -12,6 +12,9 @@ const User=require('../model/userSchema');
 const Aecell=require('../model/aecSchema');
 const Library=require('../model/librarySchema');
 const Sport=require('../model/sportSchema');
+const Response=require('../model/responseSchema');
+
+
 router.get('/',(req,res)=>{
     res.send(`Hello world from server`);
 });
@@ -110,18 +113,18 @@ router.post('/qsubmit',async (req,res)=>{
         await ru.save();
         console.log('after',ru);
         if(dept==='library'){
-            let id=verifyToken._id;
-            const newentry=new Library({id,query});
+            let uid=verifyToken._id;
+            const newentry=new Library({uid,query});
             await newentry.save();
         }
         else if(dept==='sports'){
-            let id=verifyToken._id;
-            const newentry=new Sport({id,query});
+            let uid=verifyToken._id;
+            const newentry=new Sport({uid,query});
             await newentry.save();
         }
         else if(dept==='aec'){
-            let id=verifyToken._id;
-            const newentry=new Aecell({id,query});
+            let uid=verifyToken._id;
+            const newentry=new Aecell({uid,query});
             await newentry.save();
         }
         
@@ -132,8 +135,69 @@ router.post('/qsubmit',async (req,res)=>{
 
 router.get('/aecell',(req,res)=>{
     console.log('hello enter');
+    const token=req.cookies.newcook;
+    const verifyToken=jwt.verify(token,process.env.SECRET_KEY);
 
-    Aecell.find({}).then(foundItems=>{
+    Aecell.find({uid:verifyToken._id}).then(foundItems=>{
+        console.log('insiderouter',foundItems);
+        res.json(foundItems);
+    });
+
+});
+
+router.get('/sportsdata',(req,res)=>{
+    console.log('hello enter');
+    const token=req.cookies.newcook;
+    const verifyToken=jwt.verify(token,process.env.SECRET_KEY);
+
+    Sport.find({uid:verifyToken._id}).then(foundItems=>{
+        console.log('insiderouter',foundItems);
+        res.json(foundItems);
+    });
+
+});
+
+router.get('/librarydata',(req,res)=>{
+    console.log('hello enter');
+
+    const token=req.cookies.newcook;
+    const verifyToken=jwt.verify(token,process.env.SECRET_KEY);
+
+    Library.find({uid:verifyToken._id}).then(foundItems=>{
+        console.log('insiderouter',foundItems);
+        res.json(foundItems);
+    });
+
+});
+
+
+
+router.post('/postreply',async (req,res)=>{
+    try {
+        const {uid,qid,query,reply}=req.body;
+        if(!query){
+            res.status(422).json({message:'Plz enter the query'})
+        }
+
+        const newResponse=new Response({uid,qid,query,reply});
+        
+        await newResponse.save();
+    } catch (error) {
+        console.log(error);
+    }
+
+})
+
+// for response display to students
+router.get('/respdata',async (req,res)=>{
+    console.log('hello enter');
+    const token=req.cookies.newcook;
+    const verifyToken=jwt.verify(token,process.env.SECRET_KEY);
+    // console.log("token",verifyToken);
+    // console.log(typeof(verifyToken._id));
+    // const ru=await User.findOne({_id:verifyToken._id});
+
+    Response.find({uid:verifyToken._id}).then(foundItems=>{
         console.log('insiderouter',foundItems);
         res.json(foundItems);
     });
