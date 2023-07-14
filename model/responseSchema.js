@@ -9,6 +9,10 @@ const responseSchema=new mongoose.Schema({
         type:String,
         required:true
     },
+    dept:{
+        type:String,
+        required:true
+    },
     query:{
         type:String,
         required:true

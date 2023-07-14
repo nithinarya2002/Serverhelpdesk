@@ -9,10 +9,10 @@ const jwt=require('jsonwebtoken');
 // instead of app we are using router functionality rest all remains the same......
 require('../db/conn');
 const User=require('../model/userSchema');
-const Aecell=require('../model/aecSchema');
-const Library=require('../model/librarySchema');
-const Sport=require('../model/sportSchema');
+
+const Question=require('../model/questionSchema');
 const Response=require('../model/responseSchema');
+
 
 
 router.get('/',(req,res)=>{
@@ -26,7 +26,6 @@ router.post('/signup',async (req,res)=>{
         // console.log('server',req.body);
         // console.log('na',name);
         // console.log('pass',password);
-        // 
         if (!name|| !email|| !phone|| !work|| !password|| !cpassword)
         {
             return res.status(422).json({error:"plz fill all the fields!"})
@@ -104,41 +103,48 @@ router.post('/qsubmit',async (req,res)=>{
         const verifyToken=jwt.verify(token,process.env.SECRET_KEY);
         // console.log("token",verifyToken);
         // console.log(typeof(verifyToken._id));
-        const ru=await User.findOne({_id:verifyToken._id});
-        console.log('before',ru);
-        console.log("Q",query)
+        // const ru=await User.findOne({_id:verifyToken._id});
+        // console.log('before',ru);
+        // console.log("Q",query)
         // console.log('_id',ru._id);
         // console.log(typeof(verifyToken._id))
-        ru.queries=ru.queries.concat({query:query});
-        await ru.save();
-        console.log('after',ru);
-        if(dept==='library'){
-            let uid=verifyToken._id;
-            const newentry=new Library({uid,query});
-            await newentry.save();
+        // ru.queries=ru.queries.concat({query:query});
+        // await ru.save();
+        // console.log('after',ru);
+        let uid=verifyToken._id;
+        const newquestion=new Question({uid,dept,query});
+        const posted =await newquestion.save();
+        if(posted){
+            res.status(200).json({message:'query posted successfully'})
         }
-        else if(dept==='sports'){
-            let uid=verifyToken._id;
-            const newentry=new Sport({uid,query});
-            await newentry.save();
-        }
-        else if(dept==='aec'){
-            let uid=verifyToken._id;
-            const newentry=new Aecell({uid,query});
-            await newentry.save();
-        }
+
+        // if(dept==='library'){
+        //     let uid=verifyToken._id;
+        //     const newentry=new Library({uid,query});
+        //     await newentry.save();
+        // }
+        // else if(dept==='sports'){
+        //     let uid=verifyToken._id;
+        //     const newentry=new Sport({uid,query});
+        //     await newentry.save();
+        // }
+        // else if(dept==='aec'){
+        //     let uid=verifyToken._id;
+        //     const newentry=new Aecell({uid,query});
+        //     await newentry.save();
+        // }
         
     } catch (error) {
         console.log(error);
     }
 });
 
-router.get('/aecell',(req,res)=>{
+router.get('/aecelldata',(req,res)=>{
     console.log('hello enter');
     const token=req.cookies.newcook;
     const verifyToken=jwt.verify(token,process.env.SECRET_KEY);
 
-    Aecell.find({uid:verifyToken._id}).then(foundItems=>{
+    Question.find({uid:verifyToken._id,dept:"aec"}).then(foundItems=>{
         console.log('insiderouter',foundItems);
         res.json(foundItems);
     });
@@ -150,7 +156,7 @@ router.get('/sportsdata',(req,res)=>{
     const token=req.cookies.newcook;
     const verifyToken=jwt.verify(token,process.env.SECRET_KEY);
 
-    Sport.find({uid:verifyToken._id}).then(foundItems=>{
+    Question.find({uid:verifyToken._id,dept:"sports"}).then(foundItems=>{
         console.log('insiderouter',foundItems);
         res.json(foundItems);
     });
@@ -163,7 +169,7 @@ router.get('/librarydata',(req,res)=>{
     const token=req.cookies.newcook;
     const verifyToken=jwt.verify(token,process.env.SECRET_KEY);
 
-    Library.find({uid:verifyToken._id}).then(foundItems=>{
+    Question.find({uid:verifyToken._id,dept:"library"}).then(foundItems=>{
         console.log('insiderouter',foundItems);
         res.json(foundItems);
     });
@@ -174,13 +180,20 @@ router.get('/librarydata',(req,res)=>{
 
 router.post('/postreply',async (req,res)=>{
     try {
-        const {uid,qid,query,reply}=req.body;
+        const {uid,qid,dept,query,reply}=req.body;
         if(!query){
-            res.status(422).json({message:'Plz enter the query'})
+            res.status(422).json({message:'Plz enter the response'})
         }
 
-        const newResponse=new Response({uid,qid,query,reply});
-        
+        const newResponse=new Response({uid,qid,dept,query,reply});
+        console.log(typeof(qid));
+        const del=await Question.deleteOne({_id:qid});
+        if(del){
+            console.log(del);
+        }
+        else{
+            console.log('error');
+        }
         await newResponse.save();
     } catch (error) {
         console.log(error);
@@ -189,20 +202,48 @@ router.post('/postreply',async (req,res)=>{
 })
 
 // for response display to students
-router.get('/respdata',async (req,res)=>{
-    console.log('hello enter');
+router.get('/respaec',async (req,res)=>{
+    // console.log(req);
     const token=req.cookies.newcook;
     const verifyToken=jwt.verify(token,process.env.SECRET_KEY);
     // console.log("token",verifyToken);
     // console.log(typeof(verifyToken._id));
     // const ru=await User.findOne({_id:verifyToken._id});
+    Response.find({uid:verifyToken._id,dept:"aec"}).then(foundItems=>{
+        // console.log('insiderouter',foundItems);
+        res.json(foundItems);
+    });
 
-    Response.find({uid:verifyToken._id}).then(foundItems=>{
+});
+
+router.get('/resplib',async (req,res)=>{
+    // console.log(req);
+    const token=req.cookies.newcook;
+    const verifyToken=jwt.verify(token,process.env.SECRET_KEY);
+    Response.find({uid:verifyToken._id,dept:"library"}).then(foundItems=>{
+        // console.log('insiderouter',foundItems);
+        res.json(foundItems);
+    });
+
+});
+
+router.get('/respsports',async (req,res)=>{
+    // console.log(req);
+    const token=req.cookies.newcook;
+    const verifyToken=jwt.verify(token,process.env.SECRET_KEY);
+    Response.find({uid:verifyToken._id,dept:"sports"}).then(foundItems=>{
         console.log('insiderouter',foundItems);
         res.json(foundItems);
     });
 
 });
+
+router.get('/logout',(req,res)=>{
+    console.log('Hello my logout Page');
+    res.clearCookie('newCook',{path:'/'});
+    res.status(200).send('User logout');
+})
+
 
 module.exports=router;
 

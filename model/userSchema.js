@@ -34,14 +34,6 @@ const userSchema=new mongoose.Schema({
                 required:true
             }
         }
-    ],
-    queries:[
-        {
-            query:{
-                type:String,
-                required:true
-            }
-        }
     ]
 });
 userSchema.pre('save',async function(next){
